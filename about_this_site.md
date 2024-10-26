@@ -10,7 +10,7 @@ There were a lot of `TS` & `node` based ones, which I don't know, nor intend to 
 and a few `go` based ones, which I do know.
 From those, I filtered out ones that implemeted http on their own (quite alot of them).
 Because I don't want to create and host a DB/NAS or save the posts only on the server, 
-I chose the one that seemed to work with git [this one](https://github.com/shinyypig/git-blog/tree/main).   
+I chose the one that seemed to work with git [this one](https://github.com/shinyypig/git-blog).   
 After hours of trying to set it up, figuring out that the git itself is hosted on the web server, 
 I decided to give up and create my own...
 
@@ -44,6 +44,6 @@ Cloudflare was an easy choice, because I already bought the domain from them, an
         - web server
     - cloudflared
 
-The code for the server is hosted [here](https://github.com/Dolev123/gobolg)  
+The code for the server is hosted [here](https://github.com/Dolev123/goblog)  
 The posts are hosted [here](https://github.com/Dolev123/blog-data)  
 

@@ -1,0 +1,22 @@
+/* add all relevant html tags by hand, because it is simple enough for me to do */
+.post-title {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+ul, pre, p, h2, .post-content {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Post Image */
+.post-image {
+    max-width: 100%;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    margin: 0 auto;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: block;
+    object-fit: cover;
+}

@@ -47,3 +47,18 @@ Cloudflare was an easy choice, because I already bought the domain from them, an
 The code for the server is hosted [here](https://github.com/Dolev123/goblog)  
 The posts are hosted [here](https://github.com/Dolev123/blog-data)  
 
+Image of the physical computer for funsies:
+![Damn, didn't work](laptop.jpeg)
+
+## using AI
+
+As I am __not__ a frontend developer at all, and have no idea how to make more than the basic html, I tried to find an easy way to make the basic html and css templates.  
+At the start I tried to find an open source template I can use, but none of them was to my liking. They either have been to _corporate_ in style, or required some fronted framework. 
+So I decided to give __chatGPT__ a try[^1].  
+Overall, it was a time saver.  
+I didn't need any fancy CSS or a very complex set of pages, and I didn't care to get an average quility UI generation. 
+And besides a simple issue with making images to fit within the container, everything went smoothly.  
+
+
+### FootNotes
+[^1]: [The session with chatGPT](https://chatgpt.com/share/67ba4f54-15a0-800c-b71a-bd39a48522fb)

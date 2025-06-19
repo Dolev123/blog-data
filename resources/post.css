@@ -10,6 +10,21 @@ ul, pre, p, h2, .post-content {
     margin-bottom: 1rem;
 }
 
+h2 {
+    text-decoration: underline;
+}
+
+/* Allow for scrolling code boxes */
+code {
+    display: block;
+    overflow-x:auto;
+}
+
+/* Make code blocks have round edges */
+pre {
+    border-radius: 8px;
+}
+
 /* Post Image */
 .post-image {
     max-width: 100%;

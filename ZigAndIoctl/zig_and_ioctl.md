@@ -1,8 +1,8 @@
 # Zig & IoCtl
 
-I stumbled upon a nice piece of software name _evtest_[^1], which, in the very simplest of terms, logs all keyboard events and prints them.
+I stumbled upon a nice piece of software name _evtest_ [^1], which, in the very simplest of terms, logs all keyboard events and prints them.
 As someone who uses linux both for development and as the main OS, I assumed it was something like reading from the device and parsing the data.
-Not something that should be super complicated, but enough interesting and fun to try to implement.
+Not something that should be super complicated, but enough interesting and fun to try to implement.\
 Since I mostly work with golang, c and python, I decided to implement it a a new (to me) language that peaked my interest for some time: zig.
   
 ## Checking out evtest & Learning about IoCtl
@@ -64,21 +64,22 @@ Hello
 ```
 
 The 'Hello' text is the echo from me typing it, which tells us no ioctls were used for reading it (which makes sense).  
-We can see a few different ioctls being used: _EVIOCGVERSION_, _EVIOCGID_, _EVIOCGNAME_, _EVIOCGBIT_, _EVIOCGLED_, _EVIOCGREP_, _EVIOCGPROP_, _EVIOCGRAB_. 
+We can see a few different ioctls being used: _EVIOCGVERSION_, _EVIOCGID_, _EVIOCGNAME_, _EVIOCGBIT_, _EVIOCGLED_, _EVIOCGREP_, _EVIOCGPROP_, _EVIOCGRAB_.\
 Some of those are instantly apparent to know, such as _EVIOCGNAME_, which saves the devices name in a suplied buffer, but others will require a deeper look. 
   
 From searching around the internet, I found a few sites that can assist us with looking:
-1. Elixir[^2] - The best site for understanding the linux kernel, because it has all of it's source code.
-2. The Linux Kernel[^3] - The __second__ best place to understand the kernel, it's documentation.
-3. The source code of _evtest_[^1] from the github project.
-4. The source code of _python-evdev_[^4] - a python project that wraps ineracting with devices.
-  
+1. Elixir [^2] - The best site for understanding the linux kernel, because it has all of it's source code.
+2. The Linux Kernel [^3] - The __second__ best place to understand the kernel, it's documentation.
+3. The source code of _evtest_ [^1] from the github project.
+4. The source code of _python-evdev_ [^4] - a python project that wraps ineracting with devices.
+\
+\
 Looking at 'include/uapi/linux/input-event-types.h', lines 38-51, we can see all the different event types for an "input" device event. 
 One of those types is _EV_KEY_, which, as explained by the documentation, \`Used to describe state changes of __keyboards__, buttons, or other key-like devices.\`. 
 The documentation also tells us that the values for _EV_KEY_ are: 0 => key released, 1 => key pressed, 2 => repeated press (without releasing key). 
 The different keys are specified in the same file, in lines 75-813, which is a lot of keys, even with all the comments and aliasing, which means not all are used at all times. 
 
-In order to see which keys are possible to get, let's search for the part of _evtest_ that displays it at the start (based on the string "Event code "), which sends us to line 1002:
+In order to see which keys are possible to get, let's search for the part of _evtest_ that displays it at the start (based on the string "Event code "), which sends us to line 1002: [^5]  
 ```c
 ...
 static int print_device_info(int fd)
@@ -110,7 +111,6 @@ static int print_device_info(int fd)
 ...
 }...
 ```
-[^5]  
 Before disecting the code, we can see that our assumption about _EVIOCGNAME_ is correct.  
 We can see an array of long (pun intended) arrays of size _KEY_MAX_ bits stroed in long cells. And we can see that _EVIOCGBIT_ is invoked a couple of times against that array.  
 Let's follow it's trace inside the kernel code:
@@ -160,14 +160,14 @@ struct input_dev {
 All of that code tells us that the _EVIOCGBIT_ returns an array of bits that corresponds for all the keys active in the device, indicated by 1 (active) and 0 (inactive). 
 Therefore, all the relevant keys can be recieved before reading the device. 
 That is nice, but I decided to skip this check/info dump, and just listen to the events and translating the keys. 
-Skimming in a similar fashion through the other ioctls leads to the conclusion that they're not important for us.  
-
+Skimming in a similar fashion through the other ioctls leads to the conclusion that they're not important for us.\
+\
 Now we know which ioctls to call, but we still need to understand __how__ to call them, and better our understanding to __what__ reading the device will give us.
 
 ### Deeper look into IoCtls and Input Devices
 
-Using the holy grale _man_ on _ioctl_ tells us what we could have realised from reading _evtest_'s code: 
-_ioctl()_ accepts a file descriptor (_fd_) for the device, an operations (_op_) which specifeis what we want to invoke and, sometimes, a pointer for transferring data (_argp_). 
+Using the holy grale _man_ on _ioctl_ tells us what we could have realised from reading _evtest_'s code:\
+_ioctl()_ accepts a file descriptor (_fd_) for the device, an operations (_op_) which specifeis what we want to invoke and, sometimes, a pointer for transferring data (_argp_).
 _fd_ is an int, _argp_ is a pointer of our choosing (the same as void*), and _op_ can be constructed with the _\_IOC_ macro from "include/uapi/asm-generic/ioctl.h:69":
 ```c
 
@@ -181,10 +181,12 @@ But most of the time there is a macro that wraps it, such as _EVIOCGNAME_ (from 
 ```c
 #define EVIOCGNAME(len)		_IOC(_IOC_READ, 'E', 0x06, len)		/* get device name */
 ```
-Here we can see that it is a read operation (value 2), with event number 0x06, with some length (which will be the suplied buffer's length), and of type 'E'. __'E'__. HUH?! TF is that?!  
-
+Here we can see that it is a read operation (value 2), with event number 0x06, with some length (which will be the suplied buffer's length), and of type 'E'.\
+__'E'__.\
+HUH?! TF is that?!
+\
 In the wild world of ioctls, anyone can define it's own _type_ indicator, for whatever device one is working on. 
-The value is (theoretically) \`completely arbitrary\`[^6], but from the documentation[^7] we can find what it means:
+The value is (theoretically) \`completely arbitrary\` [^6], but from the documentation [^7] we can find what it means:
 ```txt
 Code   Seq#(hex)  Include File     Comments
 ========================================================
@@ -194,8 +196,8 @@ Code   Seq#(hex)  Include File     Comments
 ...
 ```
 Ah, it is a conflict device! Wait, that doesn't seem correct...  
-It is mostly used as an input device (keyboard/mouse), BUT can be used also for the XEN virtual enviroment.  
-  
+It is mostly used as an input device (keyboard/mouse), BUT can be used also for the XEN virtual enviroment.
+\
 Now we know what to __send__, and the only thing left is to see what is recieved when we read an event from the device.  
 This is quite easy, since it is documented in the source code (include/uapi/linux/input.h:28):
 ```c
@@ -245,36 +247,41 @@ My knowledge about the zig language was comprised of:
 * It is still under development.
   
 I downloaded the latest version that was offered to me via my distro (fedora 42 -> zig 0.14.0), and opened 
-the (language reference)[https://ziglang.org/documentation/0.14.0/] and the (std documentation)[https://ziglang.org/documentation/0.14.0/std/].  
+the [language reference](https://ziglang.org/documentation/0.14.0/) and the [std documentation](https://ziglang.org/documentation/0.14.0/std/).  
 There were some code examples listed in the site, but I found them not really usefull or educative. 
 They present very few use cases for zig, and in my opinion not very relevant ones. 
-That said, there are references to other, very good, resources to learn zig from (such as Ziglings[^8] and zig.guide[^9]), which I haven't started with (do not be me).  
+That said, there are references to other, very good, resources to learn zig from (such as Ziglings [^8] and zig.guide [^9]), which I haven't started with (do not be me).  
 
 I started reading most of the language reference, while trying and testing a small program along the way.
 The program's purpose was to implement some very basic parts from our general goal of logging keyboard events. 
 Printing to stdout was quite easy, and so was creating variables/consts, importing modules and at this point the code was quite readable. 
 But as someone that was used to C, __alot__ of things were __very__ different, and it was hard to adapt.
 So I'll go over all the points that stumbled me:
-
+\
+\
 **_struct_ vs _packed struct_**:  
 who knew that structs could be orgenized as the compiler wish, and not as I wrote them? 
 At hindsight, the fact that I need to specifiy that the order matters, makes sense, because it is not relevant for a substantial amount of cases.  
-Also, the size of a _packed struct_ may be larger (alligned) than what have been specified.  
-  
+Also, the size of a _packed struct_ may be larger (alligned) than what have been specified.
+\
+\
 **strings are wierd**:  
 Apparently, strings are a compile time object, and everything else is just and array/slice/pointer to _u8_. 
 Somehow it is exactly like C, and very different from C at the same time. 
-The way I wrap my head around it is that "strings" are compile time literals and "null terminated arrays" are for runtime variables/consts.  
-  
+The way I wrap my head around it is that "strings" are compile time literals and "null terminated arrays" are for runtime variables/consts.
+\
+\
 **arrays and pointers (and slices) are wierder**:  
 Why does every byte shoukd have it's own kind of reference value?! 
 You can specify about 8 different types that can conceptually be _void*_ in C. 
-I still do not fully understand the minute differences, and it can sometimes be a P.I.T.A to figure out which one is the correct one.  
-  
+I still do not fully understand the minute differences, and it can sometimes be a P.I.T.A to figure out which one is the correct one.
+\
+\
 **no default allocators**:  
 One cannot just _malloc_ and _free_ for his heart's desire, but must create and supply an allocator for each function that requires one. 
-At first it was non-intuitive, but after reading about the 4 builtin allocators, and their examples from zig.guide, it all clicked.  
-  
+At first it was non-intuitive, but after reading about the 4 builtin allocators, and their examples from zig.guide, it all clicked.
+\
+\
 **@here(@there(@every(where)))**:  
 Since zig is a very strict in what the compiler allows and forbids, it forces everything to be very specific and verbose. 
 Most of the time, it is not an issue, but sometimes, a simple task such as printing an _usize_ as _i32_ can take 5 function calls. 
@@ -291,8 +298,9 @@ e.g.:
     }
 // ...
 ```
-It's probabble that a simpler way exists, but it was not obviuos at the time of writing.  
-  
+It's probabble that a simpler way exists, but it was not obviuos at the time of writing.
+\
+\
 **no enum aliasing**:  
 In C, you can have an enum that have 2 names with the same value, and also self reference other values from the enum:
 ```c
@@ -314,14 +322,15 @@ typedef enum E {
     EMAX,
     E_COUNT=EMAX+1,
 } E;
-```  
-
+```
+\
 **STD not documented**:  
 The standart library is not very documented, and the staff that is documented, more often than not, is not documented well enough. 
 It was sometimes more understandable to read someone else's code on github, than to consult the std documentation. 
 And that's a shame in my opinion.  
-  
-  
+\
+\
+**Some good things**:  
 Although I had many things to criticize, I also enjoed many other features of the language, such as:
 * Arbitrary sized variables (_u1_, _u9_, _u6500_).
 * _comptime_ is very powerfull, and very intuitively integrated into functions.
@@ -341,16 +350,16 @@ And it was all worth it!
 I'm sure I'll have another zig project (or expand the current one) in the future. 
 And I know this will not be my last time working with ioctls...  
   
-Anyway, if you want to check the fruit of my labor, feel free to (do so)[https://github.com/Dolev123/zig-keypresses].
+Anyway, if you want to check the fruit of my labor, feel free to [do so](https://github.com/Dolev123/zig-keypresses).
 
 ## Footnotes
 
-[^1] https://github.com/freedesktop-unofficial-mirror/evtest/
-[^2] https://elixir.bootlin.com/linux/v6.14/source (I referenced the same kernel version that is on my machine).
-[^3] specifically https://docs.kernel.org/driver-api/ioctl.html and https://docs.kernel.org/input/event-codes.html
-[^4] the main file of interest is https://github.com/gvalkov/python-evdev/blob/main/src/evdev/input.c
-[^5] https://github.com/freedesktop-unofficial-mirror/evtest/blob/master/evtest.c#L1002
-[^6] run _man ioctl_, and jump to the NOTES section. 
-[^7] https://docs.kernel.org/userspace-api/ioctl/ioctl-number.html or https://www.kernel.org/doc/Documentation/ioctl/ioctl-number.txt
-[^8] https://codeberg.org/ziglings/exercises/#ziglings
-[^9] https://zig.guide/
+[^1]: [evtest github](https://github.com/freedesktop-unofficial-mirror/evtest/)
+[^2]: [linux 6.14 source](https://elixir.bootlin.com/linux/v6.14/source)  (I referenced the same kernel version that is on my machine).
+[^3]: specifically [ioctl.html](https://docs.kernel.org/driver-api/ioctl.html) and [event-codes.html](https://docs.kernel.org/input/event-codes.html)
+[^4]: the main file of interest is [evdev/input.c](https://github.com/gvalkov/python-evdev/blob/main/src/evdev/input.c)
+[^5]: [evtest.c Line 1002](https://github.com/freedesktop-unofficial-mirror/evtest/blob/master/evtest.c#L1002)
+[^6]: run _man ioctl_, and jump to the NOTES section. 
+[^7]: [ioctl-number.html](https://docs.kernel.org/userspace-api/ioctl/ioctl-number.html) or [As txt file](https://www.kernel.org/doc/Documentation/ioctl/ioctl-number.txt)
+[^8]: [ziglings](https://codeberg.org/ziglings/exercises/#ziglings)
+[^9]: [zig.guide](https://zig.guide/)

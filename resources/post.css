@@ -12,12 +12,14 @@ ul, pre, p, h2, .post-content {
 
 h2 {
     text-decoration: underline;
+    font-size: larger;
 }
 
 /* Allow for scrolling code boxes */
 code {
     display: block;
     overflow-x:auto;
+    font-size: smaller;
 }
 
 /* Make code blocks have round edges */
